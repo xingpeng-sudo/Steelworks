@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ClaudeCodeTabState">
+    <option name="tabSessions">
+      <map>
+        <entry key="0">
+          <value>
+            <TabSessionState>
+              <option name="provider" value="claude" />
+              <option name="sessionId" value="57b20ce3-c2a4-4d89-9060-563343e0a273" />
+              <option name="cwd" value="$PROJECT_DIR$" />
+              <option name="model" value="astron-code-latest[1m]" />
+              <option name="permissionMode" value="bypassPermissions" />
+              <option name="reasoningEffort" value="medium" />
+            </TabSessionState>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
