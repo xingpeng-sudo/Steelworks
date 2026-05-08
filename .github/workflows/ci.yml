@@ -61,6 +61,18 @@ jobs:
       with:
         python-version: '3.11'
         
+    - name: Install Oracle Instant Client
+      run: |
+        # 安装 Oracle Instant Client (oracledb 依赖)
+        sudo apt-get update
+        sudo apt-get install -y libaio1
+        mkdir -p /opt/oracle
+        cd /opt/oracle
+        wget https://download.oracle.com/otn_software/linux/instantclient/219000/instantclient-basic-linux.x64-21.9.0.0.0dbru.zip
+        unzip instantclient-basic-linux.x64-21.9.0.0.0dbru.zip
+        echo /opt/oracle/instantclient_21_9 > /etc/ld.so.conf.d/oracle-instantclient.conf
+        ldconfig
+        
     - name: Cache pip dependencies
       uses: actions/cache@v4
       with:
@@ -73,17 +85,24 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+      env:
+        # 设置 Oracle Client 路径
+        LD_LIBRARY_PATH: /opt/oracle/instantclient_21_9:$LD_LIBRARY_PATH
         
     - name: Run smoke tests
       run: |
         pytest -m smoke -v --tb=short
       continue-on-error: true
-      
+      env:
+        LD_LIBRARY_PATH: /opt/oracle/instantclient_21_9:$LD_LIBRARY_PATH
+        
     - name: Run all tests with coverage
       run: |
         pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results
       continue-on-error: true
-      
+      env:
+        LD_LIBRARY_PATH: /opt/oracle/instantclient_21_9:$LD_LIBRARY_PATH
+        
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
