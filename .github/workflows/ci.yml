@@ -139,15 +139,22 @@ jobs:
         Write-Host "Allure results:"
         if (Test-Path reports/allure-results/) { Get-ChildItem reports/allure-results/ -Force } else { Write-Host "allure-results not found" }
         
-    - name: Install Allure
+    - name: Install Allure CLI
+      shell: powershell
       run: |
-        pip install allure-pytest
+        $url = "https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip"
+        Invoke-WebRequest -Uri $url -OutFile allure.zip
+        Expand-Archive -Path allure.zip -DestinationPath .\allure -Force
+        $allureBin = "$(Get-Location)\allure\allure-2.24.1\bin"
+        echo "ALLURE_BIN=$allureBin" >> $env:GITHUB_ENV
         
     - name: Generate Allure Report
       if: always()
+      shell: powershell
       run: |
-        if (Test-Path allure-results) {
-          allure generate allure-results -o allure-report --clean
+        $env:PATH += ";$env:ALLURE_BIN"
+        if (Test-Path reports/allure-results) {
+          & "$env:ALLURE_BIN\allure.bat" generate reports/allure-results -o allure-report --clean
           if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
           Move-Item allure-report allure-history -Force
         } else {
