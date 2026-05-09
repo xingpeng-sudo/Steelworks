@@ -130,13 +130,14 @@ jobs:
         path: .
         
     - name: Check downloaded files
+      shell: powershell
       run: |
-        echo "Downloaded files:"
-        ls -la
-        echo "Reports directory:"
-        ls -la reports/ || echo "reports/ not found"
-        echo "Allure results:"
-        ls -la reports/allure-results/ || echo "allure-results not found"
+        Write-Host "Downloaded files:"
+        Get-ChildItem -Force
+        Write-Host "Reports directory:"
+        if (Test-Path reports/) { Get-ChildItem reports/ -Force } else { Write-Host "reports/ not found" }
+        Write-Host "Allure results:"
+        if (Test-Path reports/allure-results/) { Get-ChildItem reports/allure-results/ -Force } else { Write-Host "allure-results not found" }
         
     - name: Generate Allure Report
       uses: simple-elf/allure-report-action@master
