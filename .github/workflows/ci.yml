@@ -113,22 +113,13 @@ jobs:
           htmlcov/
 
   # ========== 生成Allure报告 ==========
-    - name: Install Allure CLI
-      shell: powershell
-      run: |
-        $url = "https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip"
-        Invoke-WebRequest -Uri $url -OutFile allure.zip
-        Expand-Archive -Path allure.zip -DestinationPath .\allure -Force
-        $allureBin = "$(Get-Location)\allure\allure-2.24.1\bin"
-        echo "ALLURE_BIN=$allureBin" >> $env:GITHUB_ENV
-        
     - name: Generate Allure Report
       if: always()
       shell: powershell
       run: |
-        $env:PATH += ";$env:ALLURE_BIN"
+        $allureCmd = "D:\allure\allure-2.24.1\bin\allure.bat"
         if (Test-Path reports/allure-results) {
-          & "$env:ALLURE_BIN\allure.bat" generate reports/allure-results -o allure-report --clean
+          & $allureCmd generate reports/allure-results -o allure-report --clean
           if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
           Move-Item allure-report allure-history -Force
         } else {
