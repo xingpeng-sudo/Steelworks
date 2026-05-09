@@ -63,23 +63,21 @@ jobs:
         pip install -r requirements.txt
         
     - name: Create db_config.py from secrets
-      shell: powershell
+      shell: cmd
       run: |
-        $content = @"
-        """CI环境数据库配置"""
-        import os
-        
-        STEELWORKS_DB = {
-            "user": os.getenv("DB_USER", ""),
-            "password": os.getenv("DB_PASSWORD", ""),
-            "dsn": os.getenv("DB_DSN", "")
-        }
-        
-        DB_CONFIGS = {
-            "test": STEELWORKS_DB,
-        }
-        "@
-        $content | Out-File -FilePath config/db_config.py -Encoding utf8
+        echo """CI环境数据库配置""" > config\db_config.py
+        echo. >> config\db_config.py
+        echo import os >> config\db_config.py
+        echo. >> config\db_config.py
+        echo STEELWORKS_DB = { >> config\db_config.py
+        echo     "user": os.getenv("DB_USER", ""), >> config\db_config.py
+        echo     "password": os.getenv("DB_PASSWORD", ""), >> config\db_config.py
+        echo     "dsn": os.getenv("DB_DSN", "") >> config\db_config.py
+        echo } >> config\db_config.py
+        echo. >> config\db_config.py
+        echo DB_CONFIGS = { >> config\db_config.py
+        echo     "test": STEELWORKS_DB, >> config\db_config.py
+        echo } >> config\db_config.py
         
     - name: Run smoke tests
       run: |
