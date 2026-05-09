@@ -14,16 +14,14 @@ jobs:
   # ========== 代码质量检查 ==========
   lint:
     name: Code Quality Check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+    - name: Check Python version
+      run: python --version
         
     - name: Install lint tools
       run: |
@@ -56,38 +54,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+    - name: Check Python version
+      run: python --version
         
-    - name: Install Oracle Instant Client
-      run: |
-        # 安装 Oracle Instant Client (oracledb 依赖)
-        sudo apt-get update
-        sudo apt-get install -y libaio1t64 || sudo apt-get install -y libaio1
-        mkdir -p /opt/oracle
-        cd /opt/oracle
-        wget https://download.oracle.com/otn_software/linux/instantclient/219000/instantclient-basic-linux.x64-21.9.0.0.0dbru.zip
-        unzip instantclient-basic-linux.x64-21.9.0.0.0dbru.zip
-        sudo sh -c 'echo /opt/oracle/instantclient_21_9 > /etc/ld.so.conf.d/oracle-instantclient.conf'
-        sudo ldconfig
-        
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-      env:
-        # 设置 Oracle Client 路径
-        LD_LIBRARY_PATH: /opt/oracle/instantclient_21_9:$LD_LIBRARY_PATH
         
     - name: Create db_config.py from secrets
       run: |
@@ -111,7 +84,6 @@ jobs:
         pytest -m smoke -v --tb=short
       continue-on-error: true
       env:
-        LD_LIBRARY_PATH: /opt/oracle/instantclient_21_9:$LD_LIBRARY_PATH
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         DB_DSN: ${{ secrets.DB_DSN }}
@@ -121,7 +93,6 @@ jobs:
         pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results
       continue-on-error: true
       env:
-        LD_LIBRARY_PATH: /opt/oracle/instantclient_21_9:$LD_LIBRARY_PATH
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         DB_DSN: ${{ secrets.DB_DSN }}
@@ -144,7 +115,7 @@ jobs:
   # ========== 生成Allure报告 ==========
   report:
     name: Generate Allure Report
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: test
     if: always()
     
@@ -157,6 +128,7 @@ jobs:
       with:
         name: test-results
         path: .
+        
     - name: Check downloaded files
       run: |
         echo "Downloaded files:"
@@ -185,7 +157,7 @@ jobs:
   # ========== 通知（可选） ==========
   notify:
     name: Send Notification
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [lint, test]
     if: always()
     
