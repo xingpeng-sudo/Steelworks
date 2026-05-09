@@ -49,7 +49,7 @@ jobs:
   # ========== 测试执行 ==========
   test:
     name: Run Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: lint
     
     steps:
