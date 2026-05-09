@@ -139,13 +139,21 @@ jobs:
         Write-Host "Allure results:"
         if (Test-Path reports/allure-results/) { Get-ChildItem reports/allure-results/ -Force } else { Write-Host "allure-results not found" }
         
+    - name: Install Allure
+      run: |
+        pip install allure-pytest
+        
     - name: Generate Allure Report
-      uses: simple-elf/allure-report-action@master
       if: always()
-      with:
-        allure_results: reports/allure-results
-        allure_history: allure-history
-        keep_reports: 20
+      run: |
+        if (Test-Path allure-results) {
+          allure generate allure-results -o allure-report --clean
+          if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
+          Move-Item allure-report allure-history -Force
+        } else {
+          Write-Host "No allure-results found"
+          New-Item -ItemType Directory -Force -Path allure-history
+        }
         
     - name: Deploy report to GitHub Pages
       if: always()
@@ -154,6 +162,13 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: gh-pages
         publish_dir: allure-history
+        
+    - name: Upload report artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-report
+        path: allure-history/
 
   # ========== 通知（可选） ==========
   notify:
