@@ -63,25 +63,27 @@ jobs:
         pip install -r requirements.txt
         
     - name: Create db_config.py from secrets
+      shell: powershell
       run: |
-        cat > config/db_config.py << 'EOF'
-        """CI环境数据库配置"""
+        $content = @"
+        \"\"\"CI环境数据库配置\"\"\"
         import os
         
         STEELWORKS_DB = {
-            "user": os.getenv("DB_USER", ""),
-            "password": os.getenv("DB_PASSWORD", ""),
-            "dsn": os.getenv("DB_DSN", "")
+            \"user\": os.getenv(\"DB_USER\", \"\"),
+            \"password\": os.getenv(\"DB_PASSWORD\", \"\"),
+            \"dsn\": os.getenv(\"DB_DSN\", \"\")
         }
         
         DB_CONFIGS = {
-            "test": STEELWORKS_DB,
+            \"test\": STEELWORKS_DB,
         }
-        EOF
+        "@
+        $content | Out-File -FilePath config/db_config.py -Encoding utf8
         
     - name: Run smoke tests
       run: |
-        pytest -m smoke -v --tb=short
+        python -m pytest -m smoke -v --tb=short
       continue-on-error: true
       env:
         DB_USER: ${{ secrets.DB_USER }}
@@ -90,7 +92,7 @@ jobs:
         
     - name: Run all tests with coverage
       run: |
-        pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results
+        python -m pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results
       continue-on-error: true
       env:
         DB_USER: ${{ secrets.DB_USER }}
