@@ -63,8 +63,9 @@ jobs:
         pip install -r requirements.txt
         
     - name: Create db_config.py from secrets
+      shell: powershell
       run: |
-        cat > config/db_config.py << 'EOF'
+        $content = @"
         """CI环境数据库配置"""
         import os
         
@@ -77,7 +78,8 @@ jobs:
         DB_CONFIGS = {
             "test": STEELWORKS_DB,
         }
-        EOF
+        "@
+        $content | Out-File -FilePath config/db_config.py -Encoding utf8
         
     - name: Run smoke tests
       run: |
