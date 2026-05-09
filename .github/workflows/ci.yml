@@ -65,7 +65,7 @@ jobs:
       run: |
         # 安装 Oracle Instant Client (oracledb 依赖)
         sudo apt-get update
-        sudo apt-get install -y libaio1
+        sudo apt-get install -y libaio1t64 || sudo apt-get install -y libaio1
         mkdir -p /opt/oracle
         cd /opt/oracle
         wget https://download.oracle.com/otn_software/linux/instantclient/219000/instantclient-basic-linux.x64-21.9.0.0.0dbru.zip
