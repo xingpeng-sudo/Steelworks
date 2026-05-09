@@ -113,21 +113,21 @@ jobs:
           htmlcov/
 
   # ========== 生成Allure报告 ==========
-  report:
-    name: Generate Allure Report
-    runs-on: self-hosted
-    needs: test
-    if: always()
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Download test results
-      uses: actions/download-artifact@v4
-      with:
-        name: test-results
-        path: .
+    - name: Install Allure
+      run: |
+        pip install allure-pytest
+        
+    - name: Generate Allure Report
+      if: always()
+      run: |
+        if (Test-Path reports/allure-results) {
+          allure generate reports/allure-results -o allure-report --clean
+          if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
+          Move-Item allure-report allure-history -Force
+        } else {
+          Write-Host "No allure-results found"
+          New-Item -ItemType Directory -Force -Path allure-history
+        }
         
     - name: Check downloaded files
       run: |
