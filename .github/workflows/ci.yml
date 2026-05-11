@@ -78,7 +78,8 @@ jobs:
         pip install -r requirements.txt
         
     - name: Create reports directory
-      run: mkdir -p reports
+      shell: powershell
+      run: New-Item -ItemType Directory -Force -Path reports
         
     - name: Create db_config.py from secrets
       run: |
