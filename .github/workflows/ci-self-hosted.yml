@@ -1,0 +1,199 @@
+# CI/CD Pipeline for Steelworks - Self-Hosted Runner 版本
+# 此工作流在能访问内网数据库的机器上运行，执行完整测试
+# 触发条件: push到main分支 或 提交PR
+
+name: Steelworks CI (Self-Hosted)
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  # ========== 代码质量检查 ==========
+  lint:
+    name: Code Quality Check
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check Python version
+      run: python --version
+        
+    - name: Install lint tools
+      run: |
+        pip install flake8 black isort
+        
+    - name: Check code format with black
+      run: |
+        black --check --diff .
+      continue-on-error: true
+      
+    - name: Check import order with isort
+      run: |
+        isort --check-only --diff .
+      continue-on-error: true
+      
+    - name: Lint with flake8
+      run: |
+        # E501: line too long (暂时忽略)
+        # W503: line break before binary operator (与black冲突)
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  # ========== 测试执行（完整测试，包括数据库）==========
+  test:
+    name: Run All Tests (with Database)
+    runs-on: self-hosted
+    needs: lint
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check Python version
+      run: python --version
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create reports directory
+      run: mkdir -p reports
+        
+    - name: Create db_config.py from secrets
+      shell: powershell
+      run: |
+        $config = @"
+        `"""CI环境数据库配置"""`
+        import os
+
+        STEELWORKS_DB = {
+            `"user"`: os.getenv("DB_USER", ""),
+            `"password"`: os.getenv("DB_PASSWORD", ""),
+            `"dsn"`: os.getenv("DB_DSN", "")
+        }
+
+        DB_CONFIGS = {
+            `"test"`: STEELWORKS_DB,
+        }
+        "@
+        $config | Out-File -FilePath "config/db_config.py" -Encoding UTF8
+        
+    - name: Test database connectivity
+      shell: powershell
+      run: |
+        Write-Host "Testing database connectivity..."
+        $dsn = $env:DB_DSN
+        Write-Host "DSN: $dsn"
+        # 这里可以添加实际的数据库连接测试
+        
+    - name: Run all tests with coverage
+      # 运行所有测试，包括需要数据库的测试
+      shell: powershell
+      run: |
+        python -m pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results
+      env:
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_DSN: ${{ secrets.DB_DSN }}
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          reports/
+          htmlcov/
+
+  # ========== 生成Allure报告 ==========
+  report:
+    name: Generate Allure Report
+    runs-on: self-hosted
+    needs: test
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download test results
+      uses: actions/download-artifact@v4
+      with:
+        name: test-results
+        path: .
+        
+    - name: Check downloaded files
+      shell: powershell
+      run: |
+        Write-Host "Downloaded files:"
+        Get-ChildItem -Force
+        Write-Host "Reports directory:"
+        if (Test-Path reports/) { Get-ChildItem reports/ -Force } else { Write-Host "reports/ not found" }
+        Write-Host "Allure results:"
+        if (Test-Path reports/allure-results/) { Get-ChildItem reports/allure-results/ -Force } else { Write-Host "allure-results not found" }
+        
+    - name: Generate Allure Report
+      if: always()
+      shell: powershell
+      run: |
+        $allureCmd = "D:\allure\allure-2.24.1\bin\allure.bat"
+        if (Test-Path reports/allure-results) {
+          & $allureCmd generate reports/allure-results -o allure-report --clean
+          if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
+          Move-Item allure-report allure-history -Force
+        } else {
+          Write-Host "No allure-results found"
+          New-Item -ItemType Directory -Force -Path allure-history
+        }
+        
+    - name: Deploy report to GitHub Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: allure-history
+        
+    - name: Upload report artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-report
+        path: allure-history/
+
+  # ========== 通知 ==========
+  notify:
+    name: Send Notification
+    runs-on: self-hosted
+    needs: [lint, test]
+    if: always()
+    
+    steps:
+    - name: Check test results
+      shell: powershell
+      run: |
+        Write-Host "Lint: ${{ needs.lint.result }}"
+        Write-Host "Test: ${{ needs.test.result }}"
+        
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ CI Pipeline Failed!"
+        echo "请检查测试日志: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
