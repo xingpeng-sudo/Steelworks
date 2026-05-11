@@ -192,7 +192,13 @@ jobs:
           # Create allure-history directory
           New-Item -ItemType Directory -Force -Path allure-history
           
-          # Generate report
+          # Check for existing history
+          if (Test-Path allure-history/history) {
+            Write-Host "Found existing history, copying to allure-results..."
+            Copy-Item allure-history/history reports/allure-results/ -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          
+          # Generate report with history
           & $allureCmd generate reports/allure-results -o allure-report --clean
           
           if ($LASTEXITCODE -eq 0) {

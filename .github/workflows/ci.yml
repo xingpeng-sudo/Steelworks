@@ -219,12 +219,18 @@ jobs:
           # Create allure-history directory
           New-Item -ItemType Directory -Force -Path allure-history
           
-          # Generate report
+          # Check for existing history
+          if (Test-Path allure-history\history) {
+            Write-Host "Found existing history, copying to allure-results..."
+            Copy-Item allure-history\history reports\allure-results\ -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          
+          # Generate report with history
           & $allureCmd generate reports\allure-results -o allure-report --clean
           
           if ($LASTEXITCODE -eq 0) {
             Write-Host "Allure report generated successfully"
-            # Copy to allure-history
+            # Copy new report to allure-history
             Copy-Item allure-report\* allure-history\ -Recurse -Force
             Write-Host "Report copied to allure-history"
           } else {
@@ -240,7 +246,7 @@ jobs:
         
         # List final directory
         Write-Host "Final allure-history contents:"
-        Get-ChildItem allure-history -Force -Recurse | Select-Object -First 20
+        Get-ChildItem allure-history -Force -Recurse | Select-Object -First 30
         
     - name: Deploy report to GitHub Pages
       if: always()
