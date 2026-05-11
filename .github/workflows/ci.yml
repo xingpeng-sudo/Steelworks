@@ -107,17 +107,17 @@ jobs:
         Write-Host "DSN: $dsn"
         # 尝试解析主机和端口
         if ($dsn -match "([^:]+):(\d+)") {
-            $host = $matches[1]
-            $port = $matches[2]
-            Write-Host "Host: $host, Port: $port"
+            $dbHost = $matches[1]
+            $dbPort = $matches[2]
+            Write-Host "Host: $dbHost, Port: $dbPort"
             # 测试连接
             try {
                 $tcp = New-Object System.Net.Sockets.TcpClient
-                $tcp.Connect($host, [int]$port)
+                $tcp.Connect($dbHost, [int]$dbPort)
                 $tcp.Close()
-                Write-Host "✅ Database is reachable"
+                Write-Host "Database is reachable"
             } catch {
-                Write-Host "⚠️ WARNING: Cannot connect to database: $_"
+                Write-Host "WARNING: Cannot connect to database: $_"
             }
         }
       continue-on-error: true
