@@ -19,7 +19,7 @@ jobs:
   # ========== 代码质量检查 ==========
   lint:
     name: Code Quality Check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
     - name: Checkout code
@@ -57,7 +57,7 @@ jobs:
   # ========== 测试执行 ==========
   test:
     name: Run Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: lint
     
     steps:
@@ -106,11 +106,10 @@ jobs:
         timeout 5 bash -c "</dev/tcp/$DB_HOST/$DB_PORT" 2>/dev/null && echo "Database is reachable" || echo "WARNING: Database is not reachable from GitHub Actions runner (expected for internal databases)"
       continue-on-error: true
         
-    - name: Run tests with coverage (skip database tests in CI)
-      # 注意：标记为 skip_ci 的测试需要内网数据库，在 GitHub Actions 中跳过
-      # 如需运行完整测试，请使用 self-hosted runner 或在本地运行
+    - name: Run all tests with coverage
+      # 在 self-hosted runner 上运行完整测试（包括数据库测试）
       run: |
-        python -m pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results -m "not skip_ci"
+        python -m pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results
       env:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -134,7 +133,7 @@ jobs:
   # ========== 生成Allure报告 ==========
   report:
     name: Generate Allure Report
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: test
     if: always()
     
@@ -157,28 +156,19 @@ jobs:
         echo "Allure results:"
         if [ -d reports/allure-results ]; then ls -la reports/allure-results/; else echo "allure-results not found"; fi
         
-    - name: Install Allure
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wget
-        wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz
-        tar -xzf allure-2.24.1.tgz
-        sudo mv allure-2.24.1 /opt/allure
-        sudo ln -sf /opt/allure/bin/allure /usr/local/bin/allure
-        
     - name: Generate Allure Report
       if: always()
+      shell: powershell
       run: |
-        if [ -d reports/allure-results ]; then
-          allure generate reports/allure-results -o allure-report --clean
-          if [ -d allure-history ]; then
-            cp -r allure-history/* allure-report/ 2>/dev/null || true
-          fi
-          mv allure-report allure-history
-        else
-          echo "No allure-results found"
-          mkdir -p allure-history
-        fi
+        $allureCmd = "D:\allure-2.24.1\bin\allure.bat"
+        if (Test-Path reports/allure-results) {
+          & $allureCmd generate reports/allure-results -o allure-report --clean
+          if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
+          Move-Item allure-report allure-history -Force
+        } else {
+          Write-Host "No allure-results found"
+          New-Item -ItemType Directory -Force -Path allure-history
+        }
         
     - name: Deploy report to GitHub Pages
       if: always()
@@ -198,7 +188,7 @@ jobs:
   # ========== 通知（可选） ==========
   notify:
     name: Send Notification
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [lint, test]
     if: always()
     
