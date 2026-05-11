@@ -10,16 +10,26 @@ on:
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   # ========== 代码质量检查 ==========
   lint:
     name: Code Quality Check
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
     - name: Check Python version
       run: python --version
         
@@ -47,13 +57,18 @@ jobs:
   # ========== 测试执行 ==========
   test:
     name: Run Tests
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: lint
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
     - name: Check Python version
       run: python --version
         
@@ -62,22 +77,25 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
+    - name: Create reports directory
+      run: mkdir -p reports
+        
     - name: Create db_config.py from secrets
-      shell: cmd
       run: |
-        echo """CI环境数据库配置""" > config\db_config.py
-        echo. >> config\db_config.py
-        echo import os >> config\db_config.py
-        echo. >> config\db_config.py
-        echo STEELWORKS_DB = { >> config\db_config.py
-        echo     "user": os.getenv("DB_USER", ""), >> config\db_config.py
-        echo     "password": os.getenv("DB_PASSWORD", ""), >> config\db_config.py
-        echo     "dsn": os.getenv("DB_DSN", "") >> config\db_config.py
-        echo } >> config\db_config.py
-        echo. >> config\db_config.py
-        echo DB_CONFIGS = { >> config\db_config.py
-        echo     "test": STEELWORKS_DB, >> config\db_config.py
-        echo } >> config\db_config.py
+        cat > config/db_config.py << 'EOF'
+        """CI环境数据库配置"""
+        import os
+
+        STEELWORKS_DB = {
+            "user": os.getenv("DB_USER", ""),
+            "password": os.getenv("DB_PASSWORD", ""),
+            "dsn": os.getenv("DB_DSN", "")
+        }
+
+        DB_CONFIGS = {
+            "test": STEELWORKS_DB,
+        }
+        EOF
         
     - name: Run smoke tests
       run: |
@@ -115,7 +133,7 @@ jobs:
   # ========== 生成Allure报告 ==========
   report:
     name: Generate Allure Report
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: test
     if: always()
     
@@ -130,28 +148,36 @@ jobs:
         path: .
         
     - name: Check downloaded files
-      shell: powershell
       run: |
-        Write-Host "Downloaded files:"
-        Get-ChildItem -Force
-        Write-Host "Reports directory:"
-        if (Test-Path reports/) { Get-ChildItem reports/ -Force } else { Write-Host "reports/ not found" }
-        Write-Host "Allure results:"
-        if (Test-Path reports/allure-results/) { Get-ChildItem reports/allure-results/ -Force } else { Write-Host "allure-results not found" }
+        echo "Downloaded files:"
+        ls -la
+        echo "Reports directory:"
+        if [ -d reports ]; then ls -la reports/; else echo "reports/ not found"; fi
+        echo "Allure results:"
+        if [ -d reports/allure-results ]; then ls -la reports/allure-results/; else echo "allure-results not found"; fi
+        
+    - name: Install Allure
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget
+        wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz
+        tar -xzf allure-2.24.1.tgz
+        sudo mv allure-2.24.1 /opt/allure
+        sudo ln -sf /opt/allure/bin/allure /usr/local/bin/allure
         
     - name: Generate Allure Report
       if: always()
-      shell: powershell
       run: |
-        $allureCmd = "D:\allure\allure-2.24.1\bin\allure.bat"
-        if (Test-Path reports/allure-results) {
-          & $allureCmd generate reports/allure-results -o allure-report --clean
-          if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
-          Move-Item allure-report allure-history -Force
-        } else {
-          Write-Host "No allure-results found"
-          New-Item -ItemType Directory -Force -Path allure-history
-        }
+        if [ -d reports/allure-results ]; then
+          allure generate reports/allure-results -o allure-report --clean
+          if [ -d allure-history ]; then
+            cp -r allure-history/* allure-report/ 2>/dev/null || true
+          fi
+          mv allure-report allure-history
+        else
+          echo "No allure-results found"
+          mkdir -p allure-history
+        fi
         
     - name: Deploy report to GitHub Pages
       if: always()
@@ -171,7 +197,7 @@ jobs:
   # ========== 通知（可选） ==========
   notify:
     name: Send Notification
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [lint, test]
     if: always()
     

@@ -4,10 +4,14 @@
 业务场景：炼钢过程中炉后温度监测
 """
 
+import os
 import pytest
 import allure
 import pandas as pd
 from utils.sql_loader import load_sql
+
+# 确保reports目录存在
+os.makedirs("reports", exist_ok=True)
 
 # 测试配置
 TABLE_NAME = "RTD_MTS_LG1_POINTBOF1NO1"
