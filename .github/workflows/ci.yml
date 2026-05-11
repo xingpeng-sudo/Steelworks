@@ -77,7 +77,8 @@ jobs:
         
     - name: Create reports directory
       shell: powershell
-      run: New-Item -ItemType Directory -Force -Path reports
+      run: |
+        if (-not (Test-Path reports)) { New-Item -ItemType Directory -Force -Path reports } else { Write-Host "reports directory already exists" }
         
     - name: Create db_config.py from secrets
       shell: powershell
