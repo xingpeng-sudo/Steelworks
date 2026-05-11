@@ -155,7 +155,7 @@ jobs:
       if: always()
       shell: powershell
       run: |
-        $allureCmd = "D:\allure\allure-2.24.1\bin\allure.bat"
+        $allureCmd = "D:\allure-2.24.1\bin\allure.bat"
         if (Test-Path reports/allure-results) {
           & $allureCmd generate reports/allure-results -o allure-report --clean
           if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
