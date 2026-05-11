@@ -1,4 +1,5 @@
 # CI/CD Pipeline for Steelworks Data Validation
+# Self-Hosted Runner 版本 - 在 Windows 机器上运行
 # 触发条件: push到main分支 或 提交PR
 # 功能: 代码检查、测试执行、报告生成
 
@@ -30,20 +31,24 @@ jobs:
       run: python --version
         
     - name: Install lint tools
+      shell: powershell
       run: |
         pip install flake8 black isort
         
     - name: Check code format with black
+      shell: powershell
       run: |
         black --check --diff .
       continue-on-error: true
       
     - name: Check import order with isort
+      shell: powershell
       run: |
         isort --check-only --diff .
       continue-on-error: true
       
     - name: Lint with flake8
+      shell: powershell
       run: |
         # E501: line too long (暂时忽略)
         # W503: line break before binary operator (与black冲突)
@@ -65,6 +70,7 @@ jobs:
       run: python --version
         
     - name: Install dependencies
+      shell: powershell
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
@@ -74,8 +80,9 @@ jobs:
       run: New-Item -ItemType Directory -Force -Path reports
         
     - name: Create db_config.py from secrets
+      shell: powershell
       run: |
-        cat > config/db_config.py << 'EOF'
+        $config = @'
         """CI环境数据库配置"""
         import os
 
@@ -88,21 +95,40 @@ jobs:
         DB_CONFIGS = {
             "test": STEELWORKS_DB,
         }
-        EOF
+        '@
+        $config | Out-File -FilePath "config\db_config.py" -Encoding UTF8
         
     - name: Check database connectivity
+      shell: powershell
       run: |
-        echo "Checking database connectivity..."
-        DB_HOST=$(echo "${{ secrets.DB_DSN }}" | cut -d: -f1)
-        DB_PORT=$(echo "${{ secrets.DB_DSN }}" | cut -d: -f2 | cut -d/ -f1)
-        echo "Attempting to connect to $DB_HOST:$DB_PORT"
-        timeout 5 bash -c "</dev/tcp/$DB_HOST/$DB_PORT" 2>/dev/null && echo "Database is reachable" || echo "WARNING: Database is not reachable from GitHub Actions runner (expected for internal databases)"
+        Write-Host "Checking database connectivity..."
+        $dsn = $env:DB_DSN
+        Write-Host "DSN: $dsn"
+        # 尝试解析主机和端口
+        if ($dsn -match "([^:]+):(\d+)") {
+            $host = $matches[1]
+            $port = $matches[2]
+            Write-Host "Host: $host, Port: $port"
+            # 测试连接
+            try {
+                $tcp = New-Object System.Net.Sockets.TcpClient
+                $tcp.Connect($host, [int]$port)
+                $tcp.Close()
+                Write-Host "✅ Database is reachable"
+            } catch {
+                Write-Host "⚠️ WARNING: Cannot connect to database: $_"
+            }
+        }
       continue-on-error: true
+      env:
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_DSN: ${{ secrets.DB_DSN }}
         
     - name: Run all tests with coverage
-      # 在 self-hosted runner 上运行完整测试（包括数据库测试）
+      shell: powershell
       run: |
-        python -m pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results
+        python -m pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports\allure-results
       env:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -111,7 +137,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-        file: ./coverage.xml
+        file: .\coverage.xml
         fail_ci_if_error: false
         
     - name: Upload test results
@@ -120,8 +146,8 @@ jobs:
       with:
         name: test-results
         path: |
-          reports/
-          htmlcov/
+          reports\
+          htmlcov\
 
   # ========== 生成Allure报告 ==========
   report:
@@ -141,21 +167,22 @@ jobs:
         path: .
         
     - name: Check downloaded files
+      shell: powershell
       run: |
-        echo "Downloaded files:"
-        ls -la
-        echo "Reports directory:"
-        if [ -d reports ]; then ls -la reports/; else echo "reports/ not found"; fi
-        echo "Allure results:"
-        if [ -d reports/allure-results ]; then ls -la reports/allure-results/; else echo "allure-results not found"; fi
+        Write-Host "Downloaded files:"
+        Get-ChildItem -Force
+        Write-Host "Reports directory:"
+        if (Test-Path reports) { Get-ChildItem reports -Force } else { Write-Host "reports not found" }
+        Write-Host "Allure results:"
+        if (Test-Path reports\allure-results) { Get-ChildItem reports\allure-results -Force } else { Write-Host "allure-results not found" }
         
     - name: Generate Allure Report
       if: always()
       shell: powershell
       run: |
         $allureCmd = "D:\allure-2.24.1\bin\allure.bat"
-        if (Test-Path reports/allure-results) {
-          & $allureCmd generate reports/allure-results -o allure-report --clean
+        if (Test-Path reports\allure-results) {
+          & $allureCmd generate reports\allure-results -o allure-report --clean
           if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
           Move-Item allure-report allure-history -Force
         } else {
@@ -176,7 +203,7 @@ jobs:
       if: always()
       with:
         name: allure-report
-        path: allure-history/
+        path: allure-history\
 
   # ========== 通知（可选） ==========
   notify:
@@ -187,12 +214,13 @@ jobs:
     
     steps:
     - name: Check test results
+      shell: powershell
       run: |
-        echo "Lint: ${{ needs.lint.result }}"
-        echo "Test: ${{ needs.test.result }}"
+        Write-Host "Lint: ${{ needs.lint.result }}"
+        Write-Host "Test: ${{ needs.test.result }}"
         
     - name: Notify on failure
       if: failure()
       run: |
-        echo "❌ CI Pipeline Failed!"
-        echo "请检查测试日志: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        Write-Host "❌ CI Pipeline Failed!"
+        Write-Host "请检查测试日志: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
