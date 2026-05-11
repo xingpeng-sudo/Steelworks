@@ -83,21 +83,21 @@ jobs:
     - name: Create db_config.py from secrets
       shell: powershell
       run: |
-        $config = @"
-# CI Database Configuration
-import os
-
-STEELWORKS_DB = {
-    `"user`": os.getenv(`"DB_USER`", `"`"),
-    `"password`": os.getenv(`"DB_PASSWORD`", `"`"),
-    `"dsn`": os.getenv(`"DB_DSN`", `"`")
-}
-
-DB_CONFIGS = {
-    `"test`": STEELWORKS_DB,
-}
-"@
-        $config | Out-File -FilePath "config\db_config.py" -Encoding ASCII
+        $lines = @(
+            '# CI Database Configuration',
+            'import os',
+            '',
+            'STEELWORKS_DB = {',
+            '    "user": os.getenv("DB_USER", ""),',
+            '    "password": os.getenv("DB_PASSWORD", ""),',
+            '    "dsn": os.getenv("DB_DSN", "")',
+            '}',
+            '',
+            'DB_CONFIGS = {',
+            '    "test": STEELWORKS_DB,',
+            '}'
+        )
+        $lines | Out-File -FilePath "config\db_config.py" -Encoding ASCII
         
     - name: Check database connectivity
       shell: powershell
