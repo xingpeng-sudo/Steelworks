@@ -97,19 +97,20 @@ jobs:
         }
         EOF
         
-    - name: Run smoke tests
+    - name: Check database connectivity
       run: |
-        python -m pytest -m smoke -v --tb=short
+        echo "Checking database connectivity..."
+        DB_HOST=$(echo "${{ secrets.DB_DSN }}" | cut -d: -f1)
+        DB_PORT=$(echo "${{ secrets.DB_DSN }}" | cut -d: -f2 | cut -d/ -f1)
+        echo "Attempting to connect to $DB_HOST:$DB_PORT"
+        timeout 5 bash -c "</dev/tcp/$DB_HOST/$DB_PORT" 2>/dev/null && echo "Database is reachable" || echo "WARNING: Database is not reachable from GitHub Actions runner (expected for internal databases)"
       continue-on-error: true
-      env:
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        DB_DSN: ${{ secrets.DB_DSN }}
         
-    - name: Run all tests with coverage
+    - name: Run tests with coverage (skip database tests in CI)
+      # 注意：标记为 skip_ci 的测试需要内网数据库，在 GitHub Actions 中跳过
+      # 如需运行完整测试，请使用 self-hosted runner 或在本地运行
       run: |
-        python -m pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results
-      continue-on-error: true
+        python -m pytest --cov=utils --cov=tests --cov-report=xml --cov-report=html -v --tb=short --alluredir=reports/allure-results -m "not skip_ci"
       env:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}

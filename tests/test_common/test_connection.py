@@ -15,6 +15,7 @@ from utils.sql_loader import load_sql
 @allure.severity(allure.severity_level.BLOCKER)
 @pytest.mark.smoke
 @pytest.mark.connection
+@pytest.mark.skip_ci
 def test_db_connection():
     """测试数据库能否正常连接
     
@@ -46,6 +47,7 @@ def test_db_connection():
 @allure.story("数据库连接")
 @allure.severity(allure.severity_level.BLOCKER)
 @pytest.mark.connection
+@pytest.mark.skip_ci
 def test_steelworks_schema_accessible(db):
     """测试能访问 steelworks 用户的表
     

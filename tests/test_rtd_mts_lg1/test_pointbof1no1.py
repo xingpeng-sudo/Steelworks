@@ -2,6 +2,8 @@
 
 测试目标：验证转炉温度数据的完整性和范围有效性
 业务场景：炼钢过程中炉后温度监测
+
+注意：此模块的测试需要连接内网数据库，CI环境默认跳过
 """
 
 import os
@@ -12,6 +14,9 @@ from utils.sql_loader import load_sql
 
 # 确保reports目录存在
 os.makedirs("reports", exist_ok=True)
+
+# 标记整个模块的测试在CI环境中跳过
+pytestmark = pytest.mark.skip_ci
 
 # 测试配置
 TABLE_NAME = "RTD_MTS_LG1_POINTBOF1NO1"
