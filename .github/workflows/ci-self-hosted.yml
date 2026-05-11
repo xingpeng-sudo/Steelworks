@@ -157,9 +157,6 @@ jobs:
     if: always()
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
     - name: Download test results
       uses: actions/download-artifact@v4
       with:
@@ -170,25 +167,50 @@ jobs:
       shell: powershell
       run: |
         Write-Host "Downloaded files:"
-        Get-ChildItem -Force
+        Get-ChildItem -Force -Recurse | Select-Object -First 20
         Write-Host "Reports directory:"
         if (Test-Path reports/) { Get-ChildItem reports/ -Force } else { Write-Host "reports/ not found" }
         Write-Host "Allure results:"
-        if (Test-Path reports/allure-results/) { Get-ChildItem reports/allure-results/ -Force } else { Write-Host "allure-results not found" }
+        if (Test-Path reports/allure-results/) { 
+          Get-ChildItem reports/allure-results/ -Force 
+          Write-Host "Count: $(@(Get-ChildItem reports/allure-results/*.json -ErrorAction SilentlyContinue).Count) JSON files"
+        } else { 
+          Write-Host "allure-results not found" 
+        }
         
     - name: Generate Allure Report
       if: always()
       shell: powershell
       run: |
         $allureCmd = "D:\allure-2.24.1\bin\allure.bat"
-        if (Test-Path reports/allure-results) {
+        Write-Host "Using Allure: $allureCmd"
+        
+        # Check if allure-results exists and has content
+        if ((Test-Path reports/allure-results) -and (Get-ChildItem reports/allure-results/*.json -ErrorAction SilentlyContinue)) {
+          Write-Host "Found allure-results with JSON files, generating report..."
+          
+          # Create allure-history directory
+          New-Item -ItemType Directory -Force -Path allure-history
+          
+          # Generate report
           & $allureCmd generate reports/allure-results -o allure-report --clean
-          if (Test-Path allure-history) { Copy-Item allure-history\* allure-report\ -Recurse -Force }
-          Move-Item allure-report allure-history -Force
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Allure report generated successfully"
+            # Copy to allure-history
+            Copy-Item allure-report/* allure-history/ -Recurse -Force
+            Write-Host "Report copied to allure-history"
+          } else {
+            Write-Host "Allure generate failed with code $LASTEXITCODE"
+          }
         } else {
-          Write-Host "No allure-results found"
+          Write-Host "No allure-results found or empty"
           New-Item -ItemType Directory -Force -Path allure-history
         }
+        
+        # List final directory
+        Write-Host "Final allure-history contents:"
+        Get-ChildItem allure-history -Force -Recurse | Select-Object -First 20
         
     - name: Deploy report to GitHub Pages
       if: always()
