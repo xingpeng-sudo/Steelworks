@@ -116,9 +116,8 @@ jobs:
         path: reports
         
     - name: Generate HTML report
-      shell: powershell
       run: |
-        New-Item -ItemType Directory -Force -Path reports
+        mkdir -p reports
         
         cat > reports/index.html << 'EOF'
         <!DOCTYPE html>
