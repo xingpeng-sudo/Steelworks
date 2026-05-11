@@ -80,17 +80,37 @@ jobs:
       run: |
         if (-not (Test-Path reports)) { New-Item -ItemType Directory -Force -Path reports } else { Write-Host "reports directory already exists" }
         
+    - name: Verify Secrets are set
+      shell: powershell
+      run: |
+        Write-Host "Checking Secrets..."
+        if ($env:DB_USER) { Write-Host "DB_USER: SET" } else { Write-Host "DB_USER: NOT SET" }
+        if ($env:DB_PASSWORD) { Write-Host "DB_PASSWORD: SET" } else { Write-Host "DB_PASSWORD: NOT SET" }
+        if ($env:DB_DSN) { Write-Host "DB_DSN: SET ($env:DB_DSN)" } else { Write-Host "DB_DSN: NOT SET" }
+      env:
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_DSN: ${{ secrets.DB_DSN }}
+        
     - name: Create db_config.py from secrets
       shell: powershell
       run: |
+        $user = $env:DB_USER
+        $password = $env:DB_PASSWORD
+        $dsn = $env:DB_DSN
+        
+        if (-not $user) { $user = "steelworks" }
+        if (-not $password) { $password = "steelworks" }
+        if (-not $dsn) { $dsn = "192.168.1.121:1521/ORCLPDB" }
+        
         $lines = @(
             '# CI Database Configuration',
             'import os',
             '',
             'STEELWORKS_DB = {',
-            '    "user": os.getenv("DB_USER", ""),',
-            '    "password": os.getenv("DB_PASSWORD", ""),',
-            '    "dsn": os.getenv("DB_DSN", "")',
+            "    `"user`": `"$user`",",
+            "    `"password`": `"$password`",",
+            "    `"dsn`": `"$dsn`"",
             '}',
             '',
             'DB_CONFIGS = {',
@@ -98,6 +118,11 @@ jobs:
             '}'
         )
         $lines | Out-File -FilePath "config\db_config.py" -Encoding ASCII
+        Write-Host "db_config.py created with DSN: $dsn"
+      env:
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_DSN: ${{ secrets.DB_DSN }}
         
     - name: Check database connectivity
       shell: powershell
