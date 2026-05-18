@@ -1,0 +1,13 @@
+# 忽略不需要打包的文件
+.git
+.github
+.idea
+.venv
+__pycache__
+.pytest_cache
+allure-results
+allure-2.34.0
+reports
+*.md
+*.bat
+*.ps1

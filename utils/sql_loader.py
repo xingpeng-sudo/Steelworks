@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-# SQL 文件根目录
 SQL_DIR = Path(__file__).parent.parent / "sql"
 
 
@@ -16,11 +15,6 @@ def load_sql(filename: str, **params) -> str:
     
     Returns:
         格式化后的 SQL 语句
-    
-    Example:
-        sql = load_sql("rtd_mts_lg1/select_column.sql", 
-                       column_name="LUHOU_WENDU", 
-                       table_name="RTD_MTS_LG1_POINTBOF1NO1")
     """
     sql_path = SQL_DIR / filename
     
@@ -30,7 +24,7 @@ def load_sql(filename: str, **params) -> str:
     with open(sql_path, "r", encoding="utf-8") as f:
         sql = f.read()
     
-    # 移除 SQL 注释行（以 -- 开头）
+    # 移除注释行
     lines = [line for line in sql.split("\n") 
              if line.strip() and not line.strip().startswith("--")]
     sql = "\n".join(lines)
