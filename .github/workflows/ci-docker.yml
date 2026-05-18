@@ -1,14 +1,14 @@
 # CI/CD Pipeline - Docker 版本
 # 使用 Docker 容器运行测试，环境一致、可移植
 # 注意：云端容器无法访问内网数据库，只运行 CI 验证测试
+# 只在 PR 时运行，push 时由 ci.yml 运行完整测试
 
 name: Steelworks CI (Docker)
 
 on:
-  push:
-    branches: [ main, master, develop ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:  # 支持手动触发
 
 permissions:
   contents: write
@@ -57,14 +57,12 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
       
-    - name: Pull image
-      run: docker pull ghcr.io/${{ github.repository_owner }}/steelworks:${{ github.sha }}
-      
-    - name: Run CI validation tests (no database required)
+    - name: Pull and run tests
       run: |
+        docker pull ghcr.io/${{ github.repository_owner }}/steelworks:${{ github.sha }}
         docker run --rm \
-          ghcr.io/${{ github.repository_owner }}/steelworks:${{ github.sha }} \
-          pytest -v -m ci_validation --alluredir=allure-results
+          -v ${{ github.workspace }}/allure-results:/app/allure-results \
+          ghcr.io/${{ github.repository_owner }}/steelworks:${{ github.sha }}
       
     - name: Upload test results
       uses: actions/upload-artifact@v4

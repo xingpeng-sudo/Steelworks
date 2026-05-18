@@ -1,22 +1,18 @@
 # 简化版 CI - 不依赖数据库连接
 # 用于代码质量检查和静态测试
+# 只在 PR 时运行，push 时由 ci.yml 和 ci-docker.yml 运行
 
-name: Steelworks CI
+name: Steelworks CI Lite
 
 on:
-  push:
-    branches: [ main, master, develop ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:  # 支持手动触发
 
-# 设置全局权限
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
-  # ========== 代码质量检查 ==========
   lint:
     name: Code Quality Check
     runs-on: ubuntu-latest
@@ -28,39 +24,24 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
         
     - name: Install lint tools
-      run: |
-        pip install flake8 black isort
+      run: pip install flake8 black isort
         
     - name: Check code format with black
-      run: |
-        black --check --diff . > black-report.txt 2>&1 || true
-        cat black-report.txt
+      run: black --check --diff .
+      continue-on-error: true
       
     - name: Check import order with isort
-      run: |
-        isort --check-only --diff . > isort-report.txt 2>&1 || true
-        cat isort-report.txt
+      run: isort --check-only --diff .
+      continue-on-error: true
       
     - name: Lint with flake8
       run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics > flake8-report.txt 2>&1 || true
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics >> flake8-report.txt 2>&1 || true
-        cat flake8-report.txt
-        
-    - name: Upload lint reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: lint-reports
-        path: |
-          black-report.txt
-          isort-report.txt
-          flake8-report.txt
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-  # ========== 静态代码检查 ==========
   static-check:
     name: Static Code Analysis
     runs-on: ubuntu-latest
@@ -72,51 +53,24 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
         
-    - name: Install dependencies (without Oracle)
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest pytest-cov pandas
-        # 不安装 oracledb，避免 Oracle 依赖
-        
-    - name: Check imports
-      run: |
-        python -c "import pandas; print('✅ pandas OK')"
-        python -c "import pytest; print('✅ pytest OK')"
+        pip install pytest pandas
         
     - name: Syntax check
       run: |
-        python -m py_compile utils/db_helper.py && echo "✅ db_helper.py 语法正确"
-        python -m py_compile utils/sql_loader.py && echo "✅ sql_loader.py 语法正确"
-        python -m py_compile config/db_config.py.ci && echo "✅ db_config.py.ci 语法正确"
+        python -m py_compile utils/db_helper.py && echo "✅ db_helper.py OK"
+        python -m py_compile utils/sql_loader.py && echo "✅ sql_loader.py OK"
+        python -m py_compile config/db_config.py && echo "✅ db_config.py OK"
+        python -m py_compile conftest.py && echo "✅ conftest.py OK"
         echo "✅ 所有文件语法检查通过"
         
     - name: Check test files exist
       run: |
         ls -la tests/
         ls -la tests/test_common/
+        ls -la tests/test_rtd_mts_lg1/
         echo "✅ 测试文件结构检查完成"
-
-  # ========== 上传报告 ==========
-  upload-reports:
-    name: Upload Reports
-    runs-on: ubuntu-latest
-    needs: [lint, static-check]
-    if: always()
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Download lint reports
-      uses: actions/download-artifact@v4
-      with:
-        name: lint-reports
-        path: reports
-        
-    - name: Upload combined report
-      uses: actions/upload-artifact@v4
-      with:
-        name: ci-reports
-        path: reports/

@@ -19,5 +19,5 @@ RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua
 # 复制项目代码
 COPY . .
 
-# 默认运行 pytest
-CMD ["pytest", "-v", "--alluredir=allure-results"]
+# 默认运行 CI 验证测试（不需要数据库）
+CMD ["pytest", "-v", "-m", "ci_validation", "--alluredir=allure-results"]
