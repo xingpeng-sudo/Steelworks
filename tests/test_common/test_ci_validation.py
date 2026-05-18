@@ -6,6 +6,9 @@ import pytest
 import allure
 import pandas as pd
 
+# 所有测试都标记为 ci_validation
+pytestmark = pytest.mark.ci_validation
+
 
 @allure.feature("CI验证")
 @allure.story("环境检查")
@@ -29,7 +32,6 @@ def test_sql_loader_works():
     """验证 SQL 加载器"""
     from utils.sql_loader import load_sql
     
-    # 验证 SQL 文件可加载
     sql = load_sql("common/check_table_exists.sql", table_name="TEST_TABLE")
     assert "TEST_TABLE" in sql
     allure.attach(sql, name="加载的SQL", attachment_type=allure.attachment_type.TEXT)
