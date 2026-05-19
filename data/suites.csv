@@ -1,29 +1,26 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_dependencies_installed","验证关键依赖已安装"
-"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","0","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_table_has_data","表中有数据"
-"passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_python_version","验证 Python 版本"
-"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","3","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_statistics","输出统计信息"
-"passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_sql_files_exist","验证 SQL 文件存在"
-"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","13","tests.test_common","test_connection","","","","test_table_accessible","测试目标表可访问"
-"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_all_in_range","测试：所有值都在范围内
-
-验证目标：确保所有温度数据都在有效范围内
-业务含义：异常数据需要排查原因
-"
-"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","6","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_statistics","测试：输出统计信息
-
-验证目标：展示温度数据的统计概览
-用途：为数据分析提供基础信息
-"
-"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_value_range_min","最小值在范围内"
-"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","0","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_value_range_max","最大值在范围内"
+"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_all_values_in_range","所有值都在范围内"
 "passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_range_max","测试：最大值在范围内
 
 验证目标：确保温度最大值不超过上限
 业务含义：温度过高可能导致设备损坏
 影响范围：最大值异常可能表示存在极端异常数据
 "
+"passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_python_version","验证 Python 版本"
+"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","13","tests.test_common","test_connection","","","","test_table_accessible","测试目标表可访问"
+"passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_dependencies_installed","验证关键依赖已安装"
+"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","0","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_value_range_max","最大值在范围内"
+"passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_config_structure","验证项目结构"
+"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","3","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_statistics","输出统计信息"
 "passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_sql_loader_works","验证 SQL 加载器"
+"passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_sql_files_exist","验证 SQL 文件存在"
+"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_value_range_min","最小值在范围内"
+"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","0","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_table_has_data","表中有数据"
+"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","6","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_statistics","测试：输出统计信息
+
+验证目标：展示温度数据的统计概览
+用途：为数据分析提供基础信息
+"
 "passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_range_min","测试：最小值在范围内
 
 验证目标：确保温度最小值不低于下限
@@ -31,8 +28,11 @@
 影响范围：最小值异常可能表示存在极端异常数据
 "
 "passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:26 CST 2026","255","tests.test_common","test_connection","","","","test_db_connection","测试数据库连接"
-"passed","Tue May 19 15:49:25 CST 2026","Tue May 19 15:49:25 CST 2026","1","tests.test_common","test_ci_validation","","","","test_config_structure","验证项目结构"
-"passed","Tue May 19 15:49:26 CST 2026","Tue May 19 15:49:26 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_all_values_in_range","所有值都在范围内"
+"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_all_in_range","测试：所有值都在范围内
+
+验证目标：确保所有温度数据都在有效范围内
+业务含义：异常数据需要排查原因
+"
 "passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","11","tests.test_common","test_connection","","","","test_steelworks_schema_accessible","测试能访问 steelworks 用户的表
 
 验证目标：确保有权限访问目标表
