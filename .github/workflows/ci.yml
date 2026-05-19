@@ -75,10 +75,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Create reports directory
+    - name: Clean and create reports directory
       shell: powershell
       run: |
-        if (-not (Test-Path reports)) { New-Item -ItemType Directory -Force -Path reports } else { Write-Host "reports directory already exists" }
+        # 清理旧的 allure-results，确保每次只显示当前测试结果
+        if (Test-Path reports\allure-results) { Remove-Item reports\allure-results\* -Recurse -Force }
+        if (-not (Test-Path reports)) { New-Item -ItemType Directory -Force -Path reports }
+        New-Item -ItemType Directory -Force -Path reports\allure-results
         
     - name: Verify Secrets are set
       shell: powershell
