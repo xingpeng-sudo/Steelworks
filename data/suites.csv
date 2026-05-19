@@ -1,9 +1,22 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_range_max","测试：最大值在范围内
+
+验证目标：确保温度最大值不超过上限
+业务含义：温度过高可能导致设备损坏
+影响范围：最大值异常可能表示存在极端异常数据
+"
 "passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","2","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_table_has_data","测试：表中有数据
 
 验证目标：确保目标表中有数据记录
 前置条件：数据库连接正常
 预期结果：表不为空，至少有一条记录
+"
+"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","146","tests.test_common","test_connection","","","","test_db_connection","测试数据库能否正常连接
+
+验证目标：确保数据库连接可用
+前置条件：数据库服务已启动
+预期结果：能成功执行简单查询
+影响范围：此测试失败将阻塞所有数据测试
 "
 "passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_all_in_range","测试：所有值都在范围内
 
@@ -15,18 +28,11 @@
 验证目标：展示温度数据的统计概览
 用途：为数据分析提供基础信息
 "
-"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_range_max","测试：最大值在范围内
+"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_range_min","测试：最小值在范围内
 
-验证目标：确保温度最大值不超过上限
-业务含义：温度过高可能导致设备损坏
-影响范围：最大值异常可能表示存在极端异常数据
-"
-"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","146","tests.test_common","test_connection","","","","test_db_connection","测试数据库能否正常连接
-
-验证目标：确保数据库连接可用
-前置条件：数据库服务已启动
-预期结果：能成功执行简单查询
-影响范围：此测试失败将阻塞所有数据测试
+验证目标：确保温度最小值不低于下限
+业务含义：温度过低可能导致工艺异常
+影响范围：最小值异常可能表示存在极端异常数据
 "
 "passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","11","tests.test_common","test_connection","","","","test_steelworks_schema_accessible","测试能访问 steelworks 用户的表
 
@@ -34,10 +40,4 @@
 前置条件：数据库连接正常
 预期结果：能查询目标表结构
 影响范围：此测试失败将阻塞后续数据验证测试
-"
-"passed","Wed May 06 09:13:03 CST 2026","Wed May 06 09:13:03 CST 2026","1","tests.test_rtd_mts_lg1","test_pointbof1no1","","","","test_luhou_wendu_range_min","测试：最小值在范围内
-
-验证目标：确保温度最小值不低于下限
-业务含义：温度过低可能导致工艺异常
-影响范围：最小值异常可能表示存在极端异常数据
 "
