@@ -4,6 +4,7 @@ import os
 import pytest
 import allure
 from utils.sql_loader import load_sql
+from config.test_config import pointbof1no1_config
 
 # 确保报告目录存在
 os.makedirs("reports", exist_ok=True)
@@ -11,11 +12,11 @@ os.makedirs("reports", exist_ok=True)
 # CI 环境跳过
 pytestmark = pytest.mark.skip_ci
 
-# 测试配置
-TABLE_NAME = "RTD_MTS_LG1_POINTBOF1NO1"
-COLUMN_NAME = "LUHOU_WENDU"
-MIN_VALUE = 22220
-MAX_VALUE = 22229
+# 测试配置（从配置文件读取，支持环境变量覆盖）
+TABLE_NAME = pointbof1no1_config.TABLE_NAME
+COLUMN_NAME = pointbof1no1_config.COLUMN_NAME
+MIN_VALUE = pointbof1no1_config.min_value
+MAX_VALUE = pointbof1no1_config.max_value
 
 
 @pytest.fixture(scope="module")
