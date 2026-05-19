@@ -3,7 +3,7 @@
 # 触发条件: push到main分支 或 提交PR
 # 功能: 代码检查、测试执行、报告生成
 
-name: Steelworks CI (Self-Hosted)
+name: Steelworks CI (Windows Self-Hosted)
 
 on:
   push:
