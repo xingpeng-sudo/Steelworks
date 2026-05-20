@@ -1,4 +1,0 @@
-pytest: 9.0.3
-pandas: 3.0.2
-oracledb: 4.0.0
-allure: 已安装
